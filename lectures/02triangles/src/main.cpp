@@ -1,5 +1,5 @@
-#include <SDL2/SDL.h>
-#include <glad/glad.h>
+#include <SDL2/SDL.h>  // for windowing and others inputs 
+#include <glad/glad.h> // includes the opengl fun 
 #include <iostream>
 #include <vector>
 
@@ -22,6 +22,7 @@ const std::string gVertexShaderSource =
     "{\n"
     " gl_Position = vec4(position.x,position.y,position.z,position.w);\n"
     "}\n";
+
 // fragment shader 
 const std::string gFragmentShaderSource = 
     "#version 410 core\n"
@@ -30,8 +31,6 @@ const std::string gFragmentShaderSource =
     "{\n"
     " color = vec4(0.0f,0.5f,0.0f,1.0f);\n"
     "}\n";
-
-
 
 // Function Declaration
 void getOglDetatils();
@@ -56,42 +55,55 @@ void getOglDetatils(){
 }
 
 int main(){
-    std::cout << "hello wrld"<< std::endl;
-    initProg();
 
+    std::cout << "hello wrld"<< std::endl;
+
+    // 1.setup the sdl and graphic enngine 
+    initProg(); 
+
+    // 2.setup the the vertecies on to the cpu transfering those to gpu 
     vertexSpecification();
+
+    // 3. useful for setting up the vertex and fragment shader 
     createGraphicPipeline();
 
+    // 4.use the graphic pipline to draw the triangle
     mainLoop();
+
     cleanUp();
+
     return 0;
 }
 
 void initProg(){
+    // initialize sdl
     if (SDL_Init(SDL_INIT_VIDEO) < 0 ) {
         std::cout << "SDL2 cannot initialize"<< std::endl;
         exit(1);
     }
 
+    // set up opengl context use < 4.1
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE); // depricated function remove
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1); // for smooth updating 
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
+    // create a window using sdl that support sdl
     gWindow = SDL_CreateWindow("opengl window",0,0,gWidth,gHeight,SDL_WINDOW_OPENGL);
     if (gWindow == nullptr) {
         std::cout << "SDL2 cannot create window"<< std::endl;
         exit(1);
     }
 
+    // create an opengl graphics context (big object that encapsulate everything)
     gOpenGlContext = SDL_GL_CreateContext(gWindow);
      if ( gOpenGlContext == nullptr) {
-        std::cout << "SDL2 cannot create Opengl Context"<< std::endl;
+        std::cout << "Opengl context cannot be created "<< std::endl;
         exit(1);
     }
 
-    // init glad 
+    // init glad  bring all the opengl fun 
     if (!gladLoadGLLoader(SDL_GL_GetProcAddress)) {
         std::cout << "Glad was not initialise"<< std::endl;
         exit(1);
@@ -100,6 +112,9 @@ void initProg(){
     getOglDetatils();
 }
 
+// setting up our geometry data 
+// here we store z,y,x pos attribute within vertex position for the data 
+// for now this data is stored in cpu shortly we are going to store in the gpu in a call to the glBuferData which will store this info into a vertex buffer object 
 void vertexSpecification(){
     // lives on the cpu 
     const std::vector<GLfloat> vertexPosition {
@@ -124,9 +139,9 @@ void vertexSpecification(){
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,(void*)0);
 
+    // cleanup 
     glBindVertexArray(0);
     glDisableVertexAttribArray(0);
-
 } 
 
 void createGraphicPipeline(){
@@ -164,6 +179,31 @@ GLuint compileShader(GLuint type, const std::string& source){
     const char* src = source.c_str();
     glShaderSource(shaderObject,1, &src, nullptr );
     glCompileShader(shaderObject);
+
+    // shder log start 
+    int result;
+    glGetShaderiv(shaderObject, GL_COMPILE_STATUS, &result);
+
+    if(result == GL_FALSE){
+	    int length;
+	    glGetShaderiv(shaderObject, GL_INFO_LOG_LENGTH, &length);
+	    char* errorMessage = new char[length];
+	    glGetShaderInfoLog(shaderObject, length, &length, errorMessage);
+
+	    if(type == GL_VERTEX_SHADER){
+		    std::cout<< "Error GL_VERTEX_SHADER compilation failed!\n"<<errorMessage<<std::endl;
+	      }else if(type == GL_FRAGMENT_SHADER){
+		    std::cout<< "Error GL_FRAGMENT_SHADER compilation failed!\n"<<errorMessage<<std::endl;
+	      }
+	    // reclaim our memory 
+	    delete[] errorMessage;
+
+	    // delete our broken shadder
+	    glDeleteShader(shaderObject);
+
+	    return 0;
+
+    } // glsl log end
 
     return shaderObject;
 }
@@ -209,7 +249,7 @@ void preDraw(){
     glDisable(GL_CULL_FACE);
 
     glViewport(0,0,gWidth,gHeight);
-    glClearColor(0.f, 0.f, 1.f, 1.f);
+    glClearColor(0.f, 0.f, 0.f, 1.f); // bg black 
 
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
 
@@ -218,10 +258,14 @@ void preDraw(){
 
 }
 void draw(){
+    // enble our atribute 
     glBindVertexArray(gVAO);
+    // select the vertex buffer object we want to enable 
     glBindBuffer(GL_ARRAY_BUFFER, gVBO);
-
+    // render data
     glDrawArrays(GL_TRIANGLES, 0, 3);
+    // not neccessary is on egraphic pipline  
+    glUseProgram(0);
 }
 
 
