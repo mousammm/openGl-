@@ -1,0 +1,36 @@
+Trianlges - 
+  3 vertices (points)
+  3 edges    (connection on points a-b,b-c,c-d)
+  1 face     (what we see)
+
+Opengl Object-
+
+  1/ Vertex Array Object (VAO) # how to access VBO
+    
+    glGenVretexArrays(1,&myVAO1)
+    glBindVertexArray(&myVAO1)
+
+    VBO1 - [ 
+      attributes1 = (position) 
+      attributes2 = (position)
+    ]
+
+    VBO2 - [ [x,y,z,r,g,b]
+      attributes1 = (position) -> xyz
+      attributes2 = (position) -> rgb
+    ]
+
+  2/ Vertex Buffer Object (VBO) # actual data
+
+    triangles 
+      v1 = x1,y1,z1
+      v2 = x2,y2,z2
+      v3 = x3,y3,z3
+
+    now buffers are array of the trangles vertices
+     VBO1 = [x1,y1,z1,x2,y2,z2,x3,y3,z3]
+
+    Opengl Syntax - 
+       glGenBuffer (1,&myObj)
+       glBindBuffer   # we want to work with the VBO1
+       glBufferData() # populate the VBO1
