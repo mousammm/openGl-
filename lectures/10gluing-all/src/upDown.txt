@@ -1,0 +1,29 @@
+# FRAGT shader
+
+uniform float u_Offset;
+     color = vec4(v_vertexColors.r + u_Offset , v_vertexColors.g + u_Offset , v_vertexColors.b + u_Offset , 1.0f);
+
+# VERT shader
+
+uniform float u_Offset;
+     gl_Position = vec4(position.x,position.y + u_Offset ,position.z,1.0f);
+
+# MAIN.cpp
+
+// 1 declaring a global var 
+float g_Offset = 0.0f; // for shader 
+
+// 2 setting the keyboard input 
+    const Uint8* keystate = SDL_GetKeyboardState(NULL);
+    if (keystate[SDL_SCANCODE_W]) {
+     }
+
+// 3 sending from cpu to gpu
+    GLint location = glGetUniformLocation( gGraphicPiplineShaderProgram, "u_Offset");
+    if (location >= 0) {
+        glUniform1f(location,g_Offset);
+    }
+
+
+
+
